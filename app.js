@@ -1,4 +1,5 @@
 'use strict';
+window.__app = 5;   // номер версии; index.html сверяет его, чтобы заметить устаревший кэш
 const KEYS = { cards: 'hanzi-cards-v1', stats: 'hanzi-stats-v1', set: 'hanzi-settings-v1' };
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -6,6 +7,20 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const read = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 const write = (k, v) => localStorage.setItem(k, JSON.stringify(v));
 const dayKey = (off = 0) => { const d = new Date(); d.setDate(d.getDate() - off); return d.toLocaleDateString('sv-SE'); };
+
+/* ---------- Пиньинь по тонам (цвет) ---------- */
+const PV = 'aeiouüāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ';
+const SYL = new RegExp(`(?:zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw])?[${PV}]+(?:ng|n)?(?:r(?![${PV}]))?`, 'giu');   // r в конце — эрхуа, но «rén» остаётся отдельным слогом
+const toneOf = s => /[āēīōūǖ]/i.test(s) ? 1 : /[áéíóúǘ]/i.test(s) ? 2 : /[ǎěǐǒǔǚ]/i.test(s) ? 3 : /[àèìòùǜ]/i.test(s) ? 4 : 5;
+function py(p) {
+  const out = [];
+  for (const seg of String(p).split("'")) {
+    const m = seg.match(SYL);
+    if (!m || m.join('') !== seg) return esc(p);          // не смогли разобрать — показываем как есть
+    out.push(m.map(x => `<span class="t${toneOf(x)}">${esc(x)}</span>`).join(''));
+  }
+  return out.join("'");
+}
 
 /* ---------- Данные и миграция ---------- */
 // known — «узнаю» (иероглиф → смысл), knownRev — «вспоминаю» (пиньинь → иероглиф)
@@ -115,9 +130,9 @@ function renderStudy() {
   }
   const c = cur();
   const front = rev()
-    ? `<div class="pinyin big-pinyin">${esc(c.pinyin)}</div><div class="ru">${esc(c.ru)}</div><span class="hint">Вспомните иероглиф, затем переверните</span>`
+    ? `<div class="pinyin big-pinyin">${py(c.pinyin)}</div><div class="ru">${esc(c.ru)}</div><span class="hint">Вспомните иероглиф, затем переверните</span>`
     : `<div class="big-hanzi">${esc(c.hanzi)}</div><span class="hint">Нажмите, чтобы перевернуть</span>`;
-  const back = `<div class="big-hanzi">${esc(c.hanzi)}</div><div class="pinyin">${esc(c.pinyin)}</div><div class="ru">${esc(c.ru)}</div>`
+  const back = `<div class="big-hanzi">${esc(c.hanzi)}</div><div class="pinyin">${py(c.pinyin)}</div><div class="ru">${esc(c.ru)}</div>`
     + (c.example ? `<div class="ex">${esc(c.example)}</div>` : '');
   area.innerHTML = `
     <div class="scene">
@@ -135,7 +150,8 @@ function renderStudy() {
       <button class="btn g0" data-k="0"><b>Не знаю</b></button>
       <button class="btn g2" data-k="1"><b>Знаю</b></button>
     </div>
-    <p class="muted" style="text-align:center;font-size:13px">Пробел — перевернуть · ← не знаю · → знаю</p>`;
+    <p class="muted" style="text-align:center;font-size:13px;margin-bottom:4px">Пробел — перевернуть · ← не знаю · → знаю</p>
+    <p class="legend-tones">Тоны: <b class="t1">1</b><b class="t2">2</b><b class="t3">3</b><b class="t4">4</b><b class="t5">лёгкий</b></p>`;
   $('#card').onclick = flip;
   $('#show').onclick = flip;
   $('#say').onclick = () => speak(c.hanzi);
@@ -197,8 +213,8 @@ function mount(el, text) {
   return cs.map(ch => {
     const d = document.createElement('div'); d.className = 'hw'; el.appendChild(d);
     return HanziWriter.create(d, ch, { width: size, height: size, padding: 8,
-      strokeColor: '#e8eeea', outlineColor: '#34424a', radicalColor: '#5ccf9f',
-      highlightColor: '#5ccf9f', drawingColor: '#e8eeea', strokeAnimationSpeed: 1.2, delayBetweenStrokes: 250,
+      strokeColor: '#e8eeea', outlineColor: '#34424a', radicalColor: '#ffc857',
+      highlightColor: '#5ccf9f', drawingColor: '#6cb4e8', strokeAnimationSpeed: 1.2, delayBetweenStrokes: 250,
       onLoadCharDataError: () => toast(`Нет данных черт для «${ch}»`) });
   });
 }
@@ -233,7 +249,7 @@ function nextWrite() {
   const c = choices[Math.floor(Math.random() * choices.length)];
   wq = { id: c.id, ws: [], cur: 0, err: 0, hints: 0 };
   area.innerHTML = `
-    <div class="prompt"><div class="pinyin">${esc(c.pinyin)}</div><div class="ru">${esc(c.ru)}</div></div>
+    <div class="prompt"><div class="pinyin">${py(c.pinyin)}</div><div class="ru">${esc(c.ru)}</div></div>
     <div class="hwrow" id="hwBox"></div>
     <p class="status" id="wStatus">Рисуйте черты по порядку · ошибок: <span id="wErr">0</span></p>
     <div class="row center">
@@ -271,15 +287,16 @@ function finishWrite() {
 /* ---------- Список ---------- */
 let editingId = null;
 const deckShort = id => (DECKS.find(d => d.id === id) || {}).short || '';
-const statusOf = c => `Узнаю: ${c.known ? 'да' : 'нет'} · Вспоминаю: ${c.knownRev ? 'да' : 'нет'}${c.deck ? ' · ' + esc(deckShort(c.deck)) : ''}`;
+const statusOf = c => `<span class="chip${c.known ? ' on' : ''}">Узнаю</span><span class="chip rev${c.knownRev ? ' on' : ''}">Вспоминаю</span>`
+  + (c.deck ? `<span class="chip deck">${esc(deckShort(c.deck))}</span>` : '');
 function renderList() {
   updateCount();
   const q = $('#search').value.trim().toLowerCase();
   const items = cards.filter(c => !q || [c.hanzi, c.pinyin, c.ru, c.example].some(v => (v || '').toLowerCase().includes(q)));
   $('#list').innerHTML = items.length ? items.map(c => `
-    <li class="item">
+    <li class="item${c.known ? ' k' : ''}${c.knownRev ? ' r' : ''}">
       <div class="h">${esc(c.hanzi)}</div>
-      <div><div class="p">${esc(c.pinyin)}</div><div class="t">${esc(c.ru)}</div>
+      <div><div class="p">${py(c.pinyin)}</div><div class="t">${esc(c.ru)}</div>
         ${c.example ? `<div class="ex">${esc(c.example)}</div>` : ''}<div class="s">${statusOf(c)}</div></div>
       <div class="actions">
         <button class="btn small" data-say="${c.id}">Звук</button>
@@ -365,7 +382,7 @@ function renderStats() {
     return { v: (d.reviews || 0) + (d.writes || 0), label: dayKey(i).slice(8) };
   });
   const max = Math.max(1, ...days.map(d => d.v));
-  const bar = k => `<div class="stack"><i style="width:${k / Math.max(1, n) * 100}%;background:var(--jade)"></i></div>`;
+  const bar = (k, g) => `<div class="stack"><i style="width:${k / Math.max(1, n) * 100}%;background:${g}"></i></div>`;
   $('#statsBody').innerHTML = `
     <div class="tiles">
       <div class="tile"><b>${t.reviews || 0}</b><span>ответов сегодня</span></div>
@@ -376,21 +393,27 @@ function renderStats() {
       <div class="tile"><b>${knownRev}</b><span>вспоминаю иероглиф</span></div>
     </div>
     <div class="panel-title">Прогресс колоды (всего ${n})</div>
-    <div class="legend"><span>Иероглиф → смысл: ${known}</span></div>${bar(known)}
-    <div class="legend"><span>Пиньинь → иероглиф: ${knownRev}</span></div>${bar(knownRev)}
+    <div class="legend"><span>Иероглиф → смысл: ${known}</span></div>${bar(known, 'linear-gradient(90deg,#5ccf9f,#6cb4e8)')}
+    <div class="legend"><span>Пиньинь → иероглиф: ${knownRev}</span></div>${bar(knownRev, 'linear-gradient(90deg,#b794f6,#ff7a8a)')}
     <div class="panel-title">Активность за 14 дней</div>
     <div class="bars">${days.map(d => `<div class="bar" title="${d.v}"><i class="${d.v ? '' : 'zero'}" style="height:${d.v / max * 80}%"></i>${d.label}</div>`).join('')}</div>`;
 }
 
 /* ---------- Колоды ---------- */
 function renderDecks() {
+  if (!Array.isArray(window.DECKS)) {
+    $('#decksBody').innerHTML = '<div class="empty"><strong>Файл decks.js не загрузился</strong>Он должен лежать рядом с index.html. Загрузите его в репозиторий и обновите страницу.</div>';
+    return;
+  }
   $('#decksBody').innerHTML = DECKS.length ? DECKS.map(d => {
-    const have = cards.filter(c => c.deck === d.id).length;
+    const mine = cards.filter(c => c.deck === d.id), have = mine.length, known = mine.filter(c => c.known).length;
     return `<div class="form deck">
-      <div><h2>${esc(d.title)}</h2><p class="muted">${esc(d.desc)}</p>
-        <p class="s">Слов в колоде: ${d.cards.length} · у вас: ${have}</p></div>
+      <div class="deck-top"><div class="deck-badge">${esc(d.short || 'Колода')}</div>
+        <div><h2>${esc(d.title)}</h2><p class="muted">${esc(d.desc)}</p></div></div>
+      <div><div class="meter"><i style="width:${have ? known / d.cards.length * 100 : 0}%"></i></div>
+        <div class="deck-meta">В колоде слов: ${d.cards.length} · добавлено: ${have} · выучено: ${known}</div></div>
       <div class="row">
-        <button class="btn primary" data-add="${d.id}">${have ? 'Добавить недостающие' : 'Добавить в мои карточки'}</button>
+        <button class="btn primary" data-add="${d.id}" ${have >= d.cards.length ? 'disabled' : ''}>${have >= d.cards.length ? 'Все слова добавлены' : have ? 'Добавить недостающие' : 'Добавить в мои карточки'}</button>
         ${have ? `<button class="btn danger" data-rm="${d.id}">Убрать колоду</button>` : ''}
       </div></div>`;
   }).join('') : '<div class="empty">Готовых колод пока нет</div>';

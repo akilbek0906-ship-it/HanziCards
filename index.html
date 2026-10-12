@@ -6,9 +6,13 @@
 <title>Иероглифы — карточки</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
+<div id="stale" hidden style="background:#ffc857;color:#222;padding:10px 14px;font:14px/1.4 system-ui,sans-serif;text-align:center">
+  Загружена устаревшая версия файлов сайта. Обновите страницу жёстко (Ctrl+F5; на телефоне закройте вкладку и откройте заново).
+  Если не помогло — проверьте, что в репозитории заменены все четыре файла: index.html, style.css, app.js, decks.js.
+</div>
 <header class="top">
   <h1 class="brand">汉字</h1>
   <nav class="tabs" role="tablist">
@@ -85,7 +89,14 @@
 
 <div id="toast" class="toast" role="status"></div>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3/dist/hanzi-writer.min.js"></script>
-<script src="decks.js"></script>
-<script src="app.js"></script>
+<script src="decks.js?v=5"></script>
+<script src="app.js?v=5"></script>
+<script>
+  // Если браузер подтянул старые файлы вперемешку с новыми — подскажем, что делать
+  (function () {
+    var css = getComputedStyle(document.documentElement).getPropertyValue('--v').trim();
+    if (window.__app !== 5 || css !== '5') document.getElementById('stale').hidden = false;
+  })();
+</script>
 </body>
 </html>
