@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Иероглифы — карточки</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <h1 class="brand">汉字</h1>
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-view="study" role="tab">Учить</button>
+    <button class="tab" data-view="write" role="tab">Писать</button>
+    <button class="tab" data-view="list" role="tab">Карточки <span id="count" class="badge">0</span></button>
+    <button class="tab" data-view="stats" role="tab">Статистика</button>
+  </nav>
+</header>
+
+<main>
+  <section id="view-study" class="view">
+    <div class="seg" id="modeSeg">
+      <button data-mode="fwd">Иероглиф → смысл</button>
+      <button data-mode="rev">Пиньинь → иероглиф</button>
+    </div>
+    <div class="study-bar">
+      <div class="left"><button class="btn small" id="undo" disabled>← Назад</button> <span id="progress" class="muted"></span></div>
+      <div class="opts">
+        <label class="check"><input type="checkbox" id="includeKnown"> Повторять и известные</label>
+        <label class="check"><input type="checkbox" id="autoSpeak"> Озвучка ответа</label>
+      </div>
+    </div>
+    <div id="studyArea"></div>
+  </section>
+
+  <section id="view-write" class="view" hidden>
+    <div id="writeArea"></div>
+  </section>
+
+  <section id="view-list" class="view" hidden>
+    <form id="cardForm" class="form" autocomplete="off">
+      <h2 id="formTitle">Новая карточка</h2>
+      <div class="fields">
+        <label>Иероглиф<input id="fHanzi" class="hanzi-input" required placeholder="你好"></label>
+        <label>Пиньинь<input id="fPinyin" required placeholder="nǐ hǎo"></label>
+        <label>Перевод<input id="fRu" required placeholder="привет"></label>
+      </div>
+      <label class="ex-field">Пример предложения (необязательно)
+        <textarea id="fExample" rows="2" placeholder="我喜欢学中文。 Wǒ xǐhuan xué zhōngwén. Я люблю учить китайский."></textarea></label>
+      <div class="row">
+        <button class="btn primary" type="submit" id="fSubmit">Добавить</button>
+        <button class="btn" type="button" id="fCancel" hidden>Отмена</button>
+      </div>
+    </form>
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Поиск: иероглиф, пиньинь, перевод">
+      <button class="btn" id="exportBtn">Экспорт</button>
+      <button class="btn" id="importBtn">Импорт</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+    <ul id="list" class="list"></ul>
+  </section>
+
+  <section id="view-stats" class="view" hidden>
+    <div id="statsBody"></div>
+  </section>
+</main>
+
+<dialog id="strokeDlg">
+  <h2 id="strokeTitle" class="dlg-title"></h2>
+  <div id="strokeBox" class="hwrow"></div>
+  <div class="row center"><button class="btn primary" id="strokeClose">Закрыть</button></div>
+</dialog>
+
+<div id="toast" class="toast" role="status"></div>
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3/dist/hanzi-writer.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
