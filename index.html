@@ -15,6 +15,7 @@
     <button class="tab active" data-view="study" role="tab">Учить</button>
     <button class="tab" data-view="write" role="tab">Писать</button>
     <button class="tab" data-view="list" role="tab">Карточки <span id="count" class="badge">0</span></button>
+    <button class="tab" data-view="decks" role="tab">Колоды</button>
     <button class="tab" data-view="stats" role="tab">Статистика</button>
   </nav>
 </header>
@@ -24,6 +25,10 @@
     <div class="seg" id="modeSeg">
       <button data-mode="fwd">Иероглиф → смысл</button>
       <button data-mode="rev">Пиньинь → иероглиф</button>
+    </div>
+    <div class="filters">
+      <label>Колода <select id="deckFilter"></select></label>
+      <label>Порция <select id="batchSel"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="0">все</option></select></label>
     </div>
     <div class="study-bar">
       <div class="left"><button class="btn small" id="undo" disabled>← Назад</button> <span id="progress" class="muted"></span></div>
@@ -63,6 +68,10 @@
     <ul id="list" class="list"></ul>
   </section>
 
+  <section id="view-decks" class="view" hidden>
+    <div id="decksBody"></div>
+  </section>
+
   <section id="view-stats" class="view" hidden>
     <div id="statsBody"></div>
   </section>
@@ -76,6 +85,7 @@
 
 <div id="toast" class="toast" role="status"></div>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3/dist/hanzi-writer.min.js"></script>
+<script src="decks.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -11,12 +11,13 @@ const dayKey = (off = 0) => { const d = new Date(); d.setDate(d.getDate() - off)
 // known — «узнаю» (иероглиф → смысл), knownRev — «вспоминаю» (пиньинь → иероглиф)
 function norm(c) {
   return { id: c.id || uid(), hanzi: String(c.hanzi), pinyin: String(c.pinyin), ru: String(c.ru),
-    example: c.example ? String(c.example) : '', created: c.created || Date.now(),
+    example: c.example ? String(c.example) : '', deck: c.deck || '', created: c.created || Date.now(),
     known: !!(c.known ?? c.reps > 0), knownRev: !!c.knownRev };
 }
 let cards = read(KEYS.cards, []).map(norm);
 let stats = read(KEYS.stats, { days: {} }); if (!stats.days) stats.days = {};
-const settings = Object.assign({ autoSpeak: true, mode: 'fwd' }, read(KEYS.set, {}));
+const settings = Object.assign({ autoSpeak: true, mode: 'fwd', deck: 'all', batch: 20 }, read(KEYS.set, {}));
+const DECKS = window.DECKS || [];
 const saveCards = () => write(KEYS.cards, cards);
 const saveSettings = () => write(KEYS.set, settings);
 saveCards();
@@ -51,13 +52,14 @@ function speak(text) {
 }
 
 /* ---------- Вкладки ---------- */
-const VIEWS = ['study', 'write', 'list', 'stats'];
+const VIEWS = ['study', 'write', 'list', 'decks', 'stats'];
 function showView(name) {
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   VIEWS.forEach(v => $('#view-' + v).hidden = v !== name);
   if (name === 'study') buildQueue();
   if (name === 'write') nextWrite();
   if (name === 'list') renderList();
+  if (name === 'decks') renderDecks();
   if (name === 'stats') renderStats();
 }
 document.querySelectorAll('.tab').forEach(b => b.onclick = () => showView(b.dataset.view));
@@ -71,11 +73,24 @@ function shuffle(a) {
   for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
   return a;
 }
+const inDeck = c => settings.deck === 'all' || (settings.deck === 'own' ? !c.deck : c.deck === settings.deck);
+function fillDeckFilter() {
+  const opts = [['all', 'Все карточки'], ['own', 'Мои карточки'],
+    ...DECKS.filter(d => cards.some(c => c.deck === d.id)).map(d => [d.id, d.title])];
+  if (!opts.some(o => o[0] === settings.deck)) settings.deck = 'all';
+  $('#deckFilter').innerHTML = opts.map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join('');
+  $('#deckFilter').value = settings.deck;
+  $('#batchSel').value = String(settings.batch);
+}
 function buildQueue() {
-  queue = shuffle(cards.filter(c => includeKnown || !c[kf()]).map(c => c.id));
+  fillDeckFilter();
+  const pool = shuffle(cards.filter(c => inDeck(c) && (includeKnown || !c[kf()])).map(c => c.id));
+  queue = settings.batch ? pool.slice(0, settings.batch) : pool;   // порция: не больше N карточек за раз
   history = []; flipped = revealed = false;
   renderStudy();
 }
+$('#deckFilter').onchange = e => { settings.deck = e.target.value; saveSettings(); buildQueue(); };
+$('#batchSel').onchange = e => { settings.batch = +e.target.value; saveSettings(); buildQueue(); };
 function renderStudy() {
   const area = $('#studyArea');
   $('#progress').textContent = queue.length ? `Осталось: ${queue.length}` : '';
@@ -86,6 +101,15 @@ function renderStudy() {
     $('#goAdd').onclick = () => showView('list'); return;
   }
   if (!queue.length) {
+    const total = cards.filter(inDeck).length, left = cards.filter(c => inDeck(c) && !c[kf()]).length;
+    if (!total) {
+      area.innerHTML = `<div class="empty"><strong>Здесь пока пусто</strong>В выбранной колоде нет карточек.<br><button class="btn primary" id="goDecks">К колодам</button></div>`;
+      $('#goDecks').onclick = () => showView('decks'); return;
+    }
+    if (left) {
+      area.innerHTML = `<div class="empty"><strong>Порция закончена</strong>Ещё не выучено: ${left}.<br><button class="btn primary" id="nextBatch">Следующая порция</button></div>`;
+      $('#nextBatch').onclick = buildQueue; return;
+    }
     area.innerHTML = `<div class="empty"><strong>Всё выучено</strong>Неизвестных карточек не осталось.<br><button class="btn primary" id="again">Повторить все</button></div>`;
     $('#again').onclick = () => { includeKnown = true; $('#includeKnown').checked = true; buildQueue(); }; return;
   }
@@ -200,7 +224,7 @@ $('#strokeDlg').onclick = e => { if (e.target.id === 'strokeDlg') e.target.close
 let wq = { id: null, ws: [], cur: 0, err: 0, hints: 0 };
 function nextWrite() {
   const area = $('#writeArea');
-  const pool = cards.filter(c => chars(c.hanzi).length);
+  const pool = cards.filter(c => inDeck(c) && chars(c.hanzi).length);
   if (!pool.length) {
     area.innerHTML = `<div class="empty"><strong>Нет карточек для письма</strong>Добавьте карточки с иероглифами.</div>`; return;
   }
@@ -246,7 +270,8 @@ function finishWrite() {
 
 /* ---------- Список ---------- */
 let editingId = null;
-const statusOf = c => `Узнаю: ${c.known ? 'да' : 'нет'} · Вспоминаю: ${c.knownRev ? 'да' : 'нет'}`;
+const deckShort = id => (DECKS.find(d => d.id === id) || {}).short || '';
+const statusOf = c => `Узнаю: ${c.known ? 'да' : 'нет'} · Вспоминаю: ${c.knownRev ? 'да' : 'нет'}${c.deck ? ' · ' + esc(deckShort(c.deck)) : ''}`;
 function renderList() {
   updateCount();
   const q = $('#search').value.trim().toLowerCase();
@@ -355,6 +380,41 @@ function renderStats() {
     <div class="legend"><span>Пиньинь → иероглиф: ${knownRev}</span></div>${bar(knownRev)}
     <div class="panel-title">Активность за 14 дней</div>
     <div class="bars">${days.map(d => `<div class="bar" title="${d.v}"><i class="${d.v ? '' : 'zero'}" style="height:${d.v / max * 80}%"></i>${d.label}</div>`).join('')}</div>`;
+}
+
+/* ---------- Колоды ---------- */
+function renderDecks() {
+  $('#decksBody').innerHTML = DECKS.length ? DECKS.map(d => {
+    const have = cards.filter(c => c.deck === d.id).length;
+    return `<div class="form deck">
+      <div><h2>${esc(d.title)}</h2><p class="muted">${esc(d.desc)}</p>
+        <p class="s">Слов в колоде: ${d.cards.length} · у вас: ${have}</p></div>
+      <div class="row">
+        <button class="btn primary" data-add="${d.id}">${have ? 'Добавить недостающие' : 'Добавить в мои карточки'}</button>
+        ${have ? `<button class="btn danger" data-rm="${d.id}">Убрать колоду</button>` : ''}
+      </div></div>`;
+  }).join('') : '<div class="empty">Готовых колод пока нет</div>';
+}
+$('#decksBody').onclick = e => {
+  const { add, rm } = e.target.dataset;
+  if (add) addDeck(add);
+  if (rm) removeDeck(rm);
+};
+function addDeck(id) {
+  const d = DECKS.find(x => x.id === id); if (!d) return;
+  const have = new Set(cards.map(c => c.hanzi + '|' + c.pinyin));
+  let added = 0;
+  for (const [hanzi, pinyin, ru, example] of d.cards) {
+    if (have.has(hanzi + '|' + pinyin)) continue;      // уже есть — не дублируем
+    cards.push(norm({ hanzi, pinyin, ru, example: example || '', deck: id })); added++;
+  }
+  saveCards(); updateCount(); renderDecks();
+  toast(added ? `Добавлено карточек: ${added}` : 'Все слова уже есть в ваших карточках');
+}
+function removeDeck(id) {
+  const n = cards.filter(c => c.deck === id).length;
+  if (!confirm(`Удалить ${n} карточек этой колоды вместе с их прогрессом? Ваши собственные карточки не тронутся.`)) return;
+  cards = cards.filter(c => c.deck !== id); saveCards(); updateCount(); renderDecks(); toast('Колода убрана');
 }
 
 /* ---------- Старт ---------- */

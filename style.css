@@ -136,3 +136,9 @@ textarea{resize:vertical;font:inherit;line-height:1.4}
 .item .ex{margin-top:2px;text-align:left}
 .face{overflow:auto}
 .card{height:min(50vh,380px);min-height:280px}
+
+select{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;color:var(--text);font-size:14px;max-width:100%}
+.filters{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+.filters label{flex-direction:row;align-items:center;gap:8px}
+.deck{display:flex;flex-direction:column;gap:12px}
+.deck p{margin:4px 0}
