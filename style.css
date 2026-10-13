@@ -1,5 +1,5 @@
 :root{
-  --v:5; color-scheme:dark;
+  --v:6; color-scheme:dark;
   --bg:#0f1519; --panel:#172027; --panel2:#1f2a33; --line:#2a3944;
   --text:#eaf1ee; --muted:#8fa19c;
   --jade:#5ccf9f; --sky:#6cb4e8; --violet:#b794f6; --rose:#ff7a8a; --amber:#ffc857;
@@ -181,3 +181,10 @@ textarea{resize:vertical;line-height:1.4}
   .filters{grid-template-columns:1fr 1fr}
 }
 @media (prefers-reduced-motion:reduce){.card,.toast,.btn,.tab{transition:none}}
+
+.toprow{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.toprow .brand{margin:0}
+.lang{display:flex;gap:2px;background:rgba(23,32,39,.8);border:1px solid var(--line);border-radius:999px;padding:3px}
+.lang button{background:none;border:0;color:var(--muted);font-weight:700;font-size:12px;letter-spacing:.06em;padding:6px 12px;border-radius:999px;cursor:pointer;transition:.2s}
+.lang button:hover{color:var(--text)}
+.lang button.active{background:linear-gradient(135deg,var(--violet),var(--sky));color:#0d1220;box-shadow:0 4px 14px rgba(183,148,246,.35)}
