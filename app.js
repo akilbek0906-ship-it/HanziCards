@@ -1,5 +1,5 @@
 'use strict';
-window.__app = 6;   // номер версии; index.html сверяет его, чтобы заметить устаревший кэш
+window.__app = 7;   // номер версии; index.html сверяет его, чтобы заметить устаревший кэш
 const KEYS = { cards: 'hanzi-cards-v1', stats: 'hanzi-stats-v1', set: 'hanzi-settings-v1' };
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -23,7 +23,8 @@ function py(p) {
 }
 
 /* ---------- Языки ---------- */
-const LANGS = { ru: 'Русский', fr: 'Français' };   // новый язык: словарь в i18n.js + переводы в decks.js
+const LANGS = { ru: 'Русский', fr: 'Français', en: 'English' };
+const navLang = (navigator.language || '').slice(0, 2).toLowerCase();   // новый язык: словарь в i18n.js + переводы в decks.js
 const I18N = window.I18N || {};
 const DECKS = window.DECKS || [];
 const deckIdx = new Map();                          // переводы слов колоды: «колода|иероглиф|пиньинь» → {ru, fr, ...}
@@ -42,7 +43,7 @@ function norm(c) {
 let cards = read(KEYS.cards, []).map(norm);
 let stats = read(KEYS.stats, { days: {} }); if (!stats.days) stats.days = {};
 const settings = Object.assign({ autoSpeak: true, mode: 'fwd', deck: 'all', batch: 20,
-  lang: /^fr/i.test(navigator.language || '') ? 'fr' : 'ru' }, read(KEYS.set, {}));
+  lang: LANGS[navLang] ? navLang : 'ru' }, read(KEYS.set, {}));
 if (!LANGS[settings.lang]) settings.lang = 'ru';
 const saveCards = () => write(KEYS.cards, cards);
 const saveSettings = () => write(KEYS.set, settings);
@@ -217,7 +218,7 @@ $('#modeSeg').onclick = e => {
   settings.mode = b.dataset.mode; saveSettings(); buildQueue();
 };
 document.addEventListener('keydown', e => {
-  if ($('#view-study').hidden || !queue.length || /INPUT|TEXTAREA/.test(e.target.tagName) || $('#strokeDlg').open) return;
+  if ($('#view-study').hidden || !queue.length || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || e.target.closest('#langSw') || $('#strokeDlg').open) return;
   if (e.code === 'Space') { e.preventDefault(); flip(); }
   else if (revealed && (e.key === 'ArrowRight' || e.key === '2')) answer(true);
   else if (revealed && (e.key === 'ArrowLeft' || e.key === '1')) answer(false);
@@ -476,7 +477,7 @@ function applyStatic() {
   document.title = tt('Иероглифы — карточки');
   document.querySelectorAll('[data-i18n]').forEach(el => { el.dataset.src ??= el.textContent.trim(); el.textContent = tt(el.dataset.src); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.dataset.srcph ??= el.getAttribute('placeholder'); el.setAttribute('placeholder', tt(el.dataset.srcph)); });
-  document.querySelectorAll('#langSw button').forEach(b => b.classList.toggle('active', b.dataset.lang === settings.lang));
+  updateLangUI();
   $('#formTitle').textContent = tt(editingId ? 'Редактирование' : 'Новая карточка');
   $('#fSubmit').textContent = tt(editingId ? 'Сохранить' : 'Добавить');
   fillDeckFilter();
@@ -490,10 +491,36 @@ function setLang(l) {
   else if (currentView === 'stats') renderStats();
   else if (currentView === 'write') nextWrite();
 }
-$('#langSw').innerHTML = Object.entries(LANGS).map(([k, n]) => `<button data-lang="${k}" title="${n}" aria-label="${n}">${k.toUpperCase()}</button>`).join('');
-$('#langSw').onclick = e => { const b = e.target.closest('[data-lang]'); if (b) setLang(b.dataset.lang); };
+// выпадающий список языков
+function buildLangMenu() {
+  $('#langMenu').innerHTML = Object.entries(LANGS).map(([k, n]) =>
+    `<button class="lang-opt" role="option" data-lang="${k}"><span>${esc(n)}</span><span class="chk">✓</span></button>`).join('');
+}
+function updateLangUI() {
+  $('#langCur').textContent = LANGS[settings.lang];
+  $('#langBtn').setAttribute('aria-label', tt('Язык'));
+  document.querySelectorAll('.lang-opt').forEach(b => {
+    const on = b.dataset.lang === settings.lang;
+    b.classList.toggle('active', on); b.setAttribute('aria-selected', on);
+  });
+}
+function toggleLangMenu(open) {
+  const m = $('#langMenu'); open = open ?? m.hidden;
+  m.hidden = !open; $('#langBtn').setAttribute('aria-expanded', open);
+  if (open) (m.querySelector('.active') || m.firstElementChild).focus();
+}
+$('#langBtn').onclick = () => toggleLangMenu();
+$('#langMenu').onclick = e => {
+  const b = e.target.closest('[data-lang]'); if (!b) return;
+  setLang(b.dataset.lang); toggleLangMenu(false); $('#langBtn').focus();
+};
+document.addEventListener('click', e => { if (!e.target.closest('#langSw')) toggleLangMenu(false); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('#langMenu').hidden) { toggleLangMenu(false); $('#langBtn').focus(); }
+});
 
 /* ---------- Старт ---------- */
+buildLangMenu();
 applyStatic();
 updateCount();
 showView('study');

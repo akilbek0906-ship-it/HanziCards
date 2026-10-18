@@ -63,6 +63,73 @@ window.I18N = {
     'Добавлено карточек: {n}': 'Cartes ajoutées : {n}', 'Все слова уже есть в ваших карточках': 'Tous les mots sont déjà dans vos cartes',
     'Удалить {n} карточек этой колоды вместе с их прогрессом? Ваши собственные карточки не тронутся.':
       'Supprimer les {n} cartes de ce paquet, avec leur progression ? Vos propres cartes ne seront pas touchées.',
-    'Колода убрана': 'Paquet retiré'
+    'Колода убрана': 'Paquet retiré',
+    'Язык': 'Langue'
   }
+};
+
+window.I18N.en = {
+  'Иероглифы — карточки': 'Characters — flashcards',
+  'Учить': 'Study', 'Писать': 'Write', 'Карточки': 'Cards', 'Колоды': 'Decks', 'Статистика': 'Stats',
+  'Иероглиф → смысл': 'Character → meaning', 'Пиньинь → иероглиф': 'Pinyin → character',
+  'Колода': 'Deck', 'Порция': 'Batch', 'все': 'all', '← Назад': '← Back',
+  'Повторять и известные': 'Include known cards', 'Озвучка ответа': 'Read answer aloud',
+  'Иероглиф': 'Character', 'Пиньинь': 'Pinyin', 'Перевод': 'Translation',
+  'Пример предложения (необязательно)': 'Example sentence (optional)',
+  'Отмена': 'Cancel', 'Экспорт': 'Export', 'Импорт': 'Import', 'Закрыть': 'Close',
+  'привет': 'hello',
+  '我喜欢学中文。 Wǒ xǐhuan xué zhōngwén. Я люблю учить китайский.': '我喜欢学中文。 Wǒ xǐhuan xué zhōngwén. I like studying Chinese.',
+  'Поиск: иероглиф, пиньинь, перевод': 'Search: character, pinyin, translation',
+  'Редактирование': 'Editing', 'Сохранить': 'Save', 'Новая карточка': 'New card', 'Добавить': 'Add',
+  'Язык': 'Language',
+
+  'Браузер не поддерживает озвучку': "Your browser doesn't support speech synthesis",
+  'В системе нет китайского голоса': 'No Chinese voice is installed on this device',
+  'Все карточки': 'All cards', 'Мои карточки': 'My cards',
+  'Осталось: {n}': 'Remaining: {n}',
+  'Пока нет карточек': 'No cards yet', 'Добавьте первый иероглиф.': 'Add your first character.',
+  'Добавить карточку': 'Add a card',
+  'Здесь пока пусто': 'Nothing here yet', 'В выбранной колоде нет карточек.': 'The selected deck has no cards.',
+  'К колодам': 'Go to decks',
+  'Порция закончена': 'Batch complete', 'Ещё не выучено: {n}.': 'Still to learn: {n}.', 'Следующая порция': 'Next batch',
+  'Всё выучено': 'All learned', 'Неизвестных карточек не осталось.': 'No unknown cards left.',
+  'Повторить все': 'Review all',
+  'Вспомните иероглиф, затем переверните': 'Recall the character, then flip the card',
+  'Нажмите, чтобы перевернуть': 'Tap to flip', 'Перевернуть карточку': 'Flip card',
+  'Озвучить': 'Listen', 'Порядок черт': 'Stroke order', 'Показать ответ': 'Show answer',
+  'Не знаю': "Don't know", 'Знаю': 'Know',
+  'Пробел — перевернуть · ← не знаю · → знаю': "Space: flip · ← don't know · → know",
+  'Тоны:': 'Tones:', 'лёгкий': 'neutral',
+
+  'Библиотека черт не загрузилась — нужен интернет': "The stroke library couldn't load — an internet connection is required",
+  'Нет данных черт для «{ch}»': 'No stroke data for “{ch}”',
+  'В карточке нет иероглифов': 'This card has no Chinese characters',
+  'Нет карточек для письма': 'No cards to write', 'Добавьте карточки с иероглифами.': 'Add cards with characters.',
+  'Нужен интернет': 'Internet required', 'Библиотека черт не загрузилась.': "The stroke library couldn't load.",
+  'Рисуйте черты по порядку · ошибок:': 'Draw the strokes in order · mistakes:',
+  'Подсказка': 'Hint', 'Пропустить': 'Skip', 'Дальше': 'Next',
+  'Верно! Ошибок: {e}, подсказок: {h}': 'Correct! Mistakes: {e}, hints: {h}',
+
+  'Узнаю': 'Recognized', 'Вспоминаю': 'Recalled',
+  'Звук': 'Sound', 'Изменить': 'Edit', 'Удалить': 'Delete',
+  'Ничего не найдено': 'Nothing found', 'Список пуст — добавьте первую карточку выше': 'The list is empty — add your first card above',
+  'Удалить карточку?': 'Delete this card?', 'Удалено': 'Deleted', 'Сохранено': 'Saved', 'Добавлено': 'Added',
+  'Импортировано: {n}': 'Imported: {n}', 'Не удалось прочитать файл': "Couldn't read the file",
+
+  'ответов сегодня': 'answers today', 'точность сегодня': 'accuracy today', 'дней подряд': 'day streak',
+  'написано сегодня': 'written today', 'узнаю': 'recognized', 'вспоминаю иероглиф': 'characters recalled',
+  'Прогресс колоды (всего {n})': 'Deck progress (total: {n})',
+  'Иероглиф → смысл:': 'Character → meaning:', 'Пиньинь → иероглиф:': 'Pinyin → character:',
+  'Активность за 14 дней': 'Activity over 14 days',
+
+  'Файл decks.js не загрузился': "decks.js couldn't load",
+  'Он должен лежать рядом с index.html. Загрузите его в репозиторий и обновите страницу.': 'It must sit next to index.html. Upload it to the repository and refresh the page.',
+  'В колоде слов: {a} · добавлено: {b} · выучено: {c}': 'Words in deck: {a} · added: {b} · learned: {c}',
+  'Все слова добавлены': 'All words added', 'Добавить недостающие': 'Add missing words',
+  'Добавить в мои карточки': 'Add to my cards', 'Убрать колоду': 'Remove deck',
+  'Готовых колод пока нет': 'No ready-made decks yet',
+  'Добавлено карточек: {n}': 'Cards added: {n}', 'Все слова уже есть в ваших карточках': 'All words are already in your cards',
+  'Удалить {n} карточек этой колоды вместе с их прогрессом? Ваши собственные карточки не тронутся.':
+    'Delete the {n} cards from this deck along with their progress? Your own cards will not be affected.',
+  'Колода убрана': 'Deck removed'
 };

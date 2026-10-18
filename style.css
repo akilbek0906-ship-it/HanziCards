@@ -1,5 +1,5 @@
 :root{
-  --v:6; color-scheme:dark;
+  --v:7; color-scheme:dark;
   --bg:#0f1519; --panel:#172027; --panel2:#1f2a33; --line:#2a3944;
   --text:#eaf1ee; --muted:#8fa19c;
   --jade:#5ccf9f; --sky:#6cb4e8; --violet:#b794f6; --rose:#ff7a8a; --amber:#ffc857;
@@ -184,7 +184,19 @@ textarea{resize:vertical;line-height:1.4}
 
 .toprow{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .toprow .brand{margin:0}
-.lang{display:flex;gap:2px;background:rgba(23,32,39,.8);border:1px solid var(--line);border-radius:999px;padding:3px}
-.lang button{background:none;border:0;color:var(--muted);font-weight:700;font-size:12px;letter-spacing:.06em;padding:6px 12px;border-radius:999px;cursor:pointer;transition:.2s}
-.lang button:hover{color:var(--text)}
-.lang button.active{background:linear-gradient(135deg,var(--violet),var(--sky));color:#0d1220;box-shadow:0 4px 14px rgba(183,148,246,.35)}
+
+.lang{position:relative}
+.lang-btn{display:flex;align-items:center;gap:8px;background:rgba(23,32,39,.8);border:1px solid var(--line);color:var(--text);
+  border-radius:999px;padding:8px 12px 8px 10px;cursor:pointer;font-size:14px;font-weight:600;transition:.2s}
+.lang-btn:hover,.lang-btn[aria-expanded=true]{border-color:var(--violet);box-shadow:0 0 0 3px rgba(183,148,246,.18)}
+.lang-btn svg{width:18px;height:18px;color:var(--violet)}
+.lang-btn .chev{font-size:11px;opacity:.7;transition:transform .2s}
+.lang-btn[aria-expanded=true] .chev{transform:rotate(180deg)}
+.lang-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:190px;padding:6px;background:var(--panel);
+  border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 44px rgba(0,0,0,.55);z-index:30;display:grid;gap:2px}
+.lang-opt{display:flex;justify-content:space-between;align-items:center;gap:16px;width:100%;background:none;border:0;
+  color:var(--text);padding:10px 12px;border-radius:10px;cursor:pointer;font-size:15px;text-align:left}
+.lang-opt:hover,.lang-opt:focus-visible{background:var(--panel2)}
+.lang-opt .chk{opacity:0;color:var(--jade);font-weight:700}
+.lang-opt.active{font-weight:700}
+.lang-opt.active .chk{opacity:1}
