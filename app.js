@@ -1,5 +1,5 @@
 'use strict';
-window.__app = 7;   // номер версии; index.html сверяет его, чтобы заметить устаревший кэш
+window.__app = 9;   // номер версии; index.html сверяет его, чтобы заметить устаревший кэш
 const KEYS = { cards: 'hanzi-cards-v1', stats: 'hanzi-stats-v1', set: 'hanzi-settings-v1' };
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -91,22 +91,24 @@ function speak(text) {
 }
 
 /* ---------- Вкладки ---------- */
-const VIEWS = ['study', 'write', 'list', 'decks', 'stats'];
+const VIEWS = ['study', 'write', 'list', 'decks', 'stats', 'learned'];
 let currentView = 'study';
 function showView(name) {
   currentView = name;
-  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.view === (name === 'learned' ? 'study' : name)));
   VIEWS.forEach(v => $('#view-' + v).hidden = v !== name);
   if (name === 'study') buildQueue();
   if (name === 'write') nextWrite();
   if (name === 'list') renderList();
+  if (name === 'learned') renderLearned();
   if (name === 'decks') renderDecks();
   if (name === 'stats') renderStats();
 }
-document.querySelectorAll('.tab').forEach(b => b.onclick = () => showView(b.dataset.view));
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => { practiceLearned = false; practiceSel = null; showView(b.dataset.view); });
 
 /* ---------- Режим изучения ---------- */
-let queue = [], history = [], flipped = false, revealed = false, includeKnown = false;
+let queue = [], history = [], flipped = false, revealed = false, includeKnown = false, practiceLearned = false, practiceSel = null;
+const inPractice = () => practiceLearned || !!practiceSel;   // тренировка выученных или выбранных слов
 const rev = () => settings.mode === 'rev';
 const kf = () => rev() ? 'knownRev' : 'known';
 const cur = () => cards.find(c => c.id === queue[0]);
@@ -125,8 +127,10 @@ function fillDeckFilter() {
 }
 function buildQueue() {
   fillDeckFilter();
-  const pool = shuffle(cards.filter(c => inDeck(c) && (includeKnown || !c[kf()])).map(c => c.id));
-  queue = settings.batch ? pool.slice(0, settings.batch) : pool;   // порция: не больше N карточек за раз
+  const pool = practiceSel
+    ? shuffle(practiceSel.filter(id => cards.some(c => c.id === id)))            // набор, выбранный на вкладке «Карточки»
+    : shuffle(cards.filter(c => practiceLearned ? c[kf()] : inDeck(c) && (includeKnown || !c[kf()])).map(c => c.id));
+  queue = settings.batch && !practiceSel ? pool.slice(0, settings.batch) : pool;   // порция: не больше N карточек за раз
   history = []; flipped = revealed = false;
   renderStudy();
 }
@@ -136,10 +140,32 @@ function renderStudy() {
   const area = $('#studyArea');
   $('#progress').textContent = queue.length ? tt('Осталось: {n}', { n: queue.length }) : '';
   $('#undo').disabled = !history.length;
+  $('#practiceBar').hidden = !inPractice();
+  $('#practiceLabel').textContent = tt(practiceSel ? 'Учу выбранные слова' : 'Тренировка выученных');
+  $('#includeKnown').disabled = $('#deckFilter').disabled = inPractice();
+  $('#learnedBadge').textContent = cards.filter(c => c[kf()]).length;
   document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('active', b.dataset.mode === (rev() ? 'rev' : 'fwd')));
   if (!cards.length) {
     area.innerHTML = `<div class="empty"><strong>${tt('Пока нет карточек')}</strong>${tt('Добавьте первый иероглиф.')}<br><button class="btn primary" id="goAdd">${tt('Добавить карточку')}</button></div>`;
     $('#goAdd').onclick = () => showView('list'); return;
+  }
+  if (!queue.length && practiceSel) {
+    area.innerHTML = `<div class="empty"><strong>${tt('Выбранные слова пройдены')}</strong>${tt('Слов в наборе: {n}.', { n: practiceSel.length })}<br>
+        <button class="btn primary" id="sAgain">${tt('Ещё раз')}</button> <button class="btn" id="sBack">${tt('К карточкам')}</button></div>`;
+    $('#sAgain').onclick = buildQueue;
+    $('#sBack').onclick = () => { practiceSel = null; showView('list'); };
+    return;
+  }
+  if (!queue.length && practiceLearned) {
+    const n = cards.filter(c => c[kf()]).length;
+    area.innerHTML = n
+      ? `<div class="empty"><strong>${tt('Тренировка завершена')}</strong>${tt('Выученных слов: {n}.', { n })}<br>
+          <button class="btn primary" id="pAgain">${tt('Ещё раз')}</button> <button class="btn" id="pToLearned">${tt('К выученным')}</button></div>`
+      : `<div class="empty"><strong>${tt('Выученных слов не осталось')}</strong>${tt('Все слова вернулись в изучение.')}<br>
+          <button class="btn primary" id="pExit">${tt('К изучению')}</button></div>`;
+    if (n) { $('#pAgain').onclick = buildQueue; $('#pToLearned').onclick = () => { practiceLearned = false; showView('learned'); }; }
+    else $('#pExit').onclick = () => { practiceLearned = false; buildQueue(); };
+    return;
   }
   if (!queue.length) {
     const total = cards.filter(inDeck).length, left = cards.filter(c => inDeck(c) && !c[kf()]).length;
@@ -227,6 +253,40 @@ $('#autoSpeak').checked = settings.autoSpeak;
 $('#autoSpeak').onchange = e => { settings.autoSpeak = e.target.checked; saveSettings(); };
 $('#includeKnown').onchange = e => { includeKnown = e.target.checked; buildQueue(); };
 
+/* ---------- Выученные слова ---------- */
+function renderLearned() {
+  const f = kf(), q = $('#learnedSearch').value.trim().toLowerCase();
+  const all = cards.filter(c => c[f]);
+  document.querySelectorAll('#learnedSeg button').forEach(b => b.classList.toggle('active', b.dataset.mode === (rev() ? 'rev' : 'fwd')));
+  $('#learnedCount').textContent = all.length;
+  $('#practiceBtn').disabled = !all.length;
+  const items = all.filter(c => !q || [c.hanzi, c.pinyin, tx(c), c.ru].some(v => (v || '').toLowerCase().includes(q)));
+  $('#learnedList').innerHTML = items.length ? items.map(c => `
+    <li class="item ${rev() ? 'r' : 'k'}">
+      <div class="h">${esc(c.hanzi)}</div>
+      <div><div class="p">${py(c.pinyin)}</div><div class="t">${esc(tx(c))}</div>${c.example ? `<div class="ex">${esc(c.example)}</div>` : ''}</div>
+      <div class="actions">
+        <button class="btn small" data-say="${c.id}">${tt('Звук')}</button>
+        <button class="btn small" data-unlearn="${c.id}">${tt('В изучение')}</button>
+      </div>
+    </li>`).join('')
+    : `<li class="empty">${all.length ? tt('Ничего не найдено') : tt('Пока нет выученных слов. Нажимайте «Знаю» во время изучения.')}</li>`;
+}
+$('#learnedSearch').oninput = renderLearned;
+$('#learnedSeg').onclick = e => {
+  const b = e.target.closest('[data-mode]'); if (!b) return;
+  settings.mode = b.dataset.mode; saveSettings(); renderLearned();
+};
+$('#learnedList').onclick = e => {
+  const { say, unlearn } = e.target.dataset;
+  if (say) speak(cards.find(c => c.id === say).hanzi);
+  if (unlearn) { cards.find(c => c.id === unlearn)[kf()] = false; saveCards(); renderLearned(); toast('Возвращено в изучение'); }
+};
+$('#openLearned').onclick = () => { practiceLearned = false; practiceSel = null; showView('learned'); };
+$('#learnedBack').onclick = () => { practiceLearned = false; practiceSel = null; showView('study'); };
+$('#practiceBtn').onclick = () => { practiceLearned = true; practiceSel = null; showView('study'); };   // тренировка только выученных
+$('#exitPractice').onclick = () => { practiceLearned = false; practiceSel = null; buildQueue(); };
+
 /* ---------- Hanzi Writer: порядок черт и письмо ---------- */
 const chars = s => [...s].filter(ch => /\p{Script=Han}/u.test(ch));
 function hwReady() {
@@ -239,8 +299,8 @@ function mount(el, text) {
   return cs.map(ch => {
     const d = document.createElement('div'); d.className = 'hw'; el.appendChild(d);
     return HanziWriter.create(d, ch, { width: size, height: size, padding: 8,
-      strokeColor: '#e8eeea', outlineColor: '#34424a', radicalColor: '#ffc857',
-      highlightColor: '#5ccf9f', drawingColor: '#6cb4e8', strokeAnimationSpeed: 1.2, delayBetweenStrokes: 250,
+      strokeColor: '#ece9e1', outlineColor: '#3a4156', radicalColor: '#e6c07b',
+      highlightColor: '#86c5a8', drawingColor: '#8fb4e0', strokeAnimationSpeed: 1.2, delayBetweenStrokes: 250,
       onLoadCharDataError: () => toast('Нет данных черт для «{ch}»', { ch }) });
   });
 }
@@ -320,7 +380,8 @@ function renderList() {
   const q = $('#search').value.trim().toLowerCase();
   const items = cards.filter(c => !q || [c.hanzi, c.pinyin, tx(c), c.ru, c.example].some(v => (v || '').toLowerCase().includes(q)));
   $('#list').innerHTML = items.length ? items.map(c => `
-    <li class="item${c.known ? ' k' : ''}${c.knownRev ? ' r' : ''}">
+    <li class="item${c.known ? ' k' : ''}${c.knownRev ? ' r' : ''}${selectMode ? ' pickable' : ''}${selected.has(c.id) ? ' picked' : ''}" data-id="${c.id}">
+      ${selectMode ? `<span class="pick"><input type="checkbox" tabindex="-1" ${selected.has(c.id) ? 'checked' : ''}></span>` : ''}
       <div class="h">${esc(c.hanzi)}</div>
       <div><div class="p">${py(c.pinyin)}</div><div class="t">${esc(tx(c))}</div>
         ${c.example ? `<div class="ex">${esc(c.example)}</div>` : ''}<div class="s">${statusOf(c)}</div></div>
@@ -331,9 +392,17 @@ function renderList() {
       </div>
     </li>`).join('')
     : `<li class="empty">${cards.length ? tt('Ничего не найдено') : tt('Список пуст — добавьте первую карточку выше')}</li>`;
+  updateSelectUI();
 }
 $('#search').oninput = renderList;
 $('#list').onclick = e => {
+  if (selectMode) {                                   // в режиме выбора нажатие на карточку отмечает её
+    const li = e.target.closest('.item'); if (!li) return;
+    const id = li.dataset.id;
+    selected.has(id) ? selected.delete(id) : selected.add(id);
+    li.classList.toggle('picked', selected.has(id)); li.querySelector('input').checked = selected.has(id);
+    updateSelectUI(); return;
+  }
   const { say, edit, del } = e.target.dataset;
   if (say) speak(cards.find(c => c.id === say).hanzi);
   if (edit) startEdit(edit);
@@ -343,6 +412,26 @@ $('#list').onclick = e => {
     renderList(); toast('Удалено');
   }
 };
+/* ---------- Выбор карточек для отдельного изучения ---------- */
+let selectMode = false;
+const selected = new Set();
+const visibleIds = () => [...document.querySelectorAll('#list .item')].map(li => li.dataset.id);
+function updateSelectUI() {
+  $('#selectBtn').textContent = tt(selectMode ? 'Готово' : 'Выбрать');
+  $('#selectBtn').classList.toggle('on', selectMode);
+  $('#selectBar').hidden = !selectMode;
+  $('#selCount').textContent = tt('Выбрано: {n}', { n: selected.size });
+  $('#selStudy').disabled = !selected.size;
+}
+$('#selectBtn').onclick = () => { selectMode = !selectMode; if (!selectMode) selected.clear(); renderList(); };
+$('#selAll').onclick = () => { visibleIds().forEach(id => selected.add(id)); renderList(); };   // все найденные поиском
+$('#selNone').onclick = () => { selected.clear(); renderList(); };
+$('#selStudy').onclick = () => {
+  const ids = [...selected].filter(id => cards.some(c => c.id === id));
+  if (!ids.length) return toast('Сначала выберите слова');
+  practiceSel = ids; practiceLearned = false; showView('study');
+};
+
 function startEdit(id) {
   const c = cards.find(x => x.id === id); if (!c) return;
   editingId = id;
@@ -424,8 +513,8 @@ function renderStats() {
       <div class="tile"><b>${knownRev}</b><span>${tt('вспоминаю иероглиф')}</span></div>
     </div>
     <div class="panel-title">${tt('Прогресс колоды (всего {n})', { n })}</div>
-    <div class="legend"><span>${tt('Иероглиф → смысл:')} ${known}</span></div>${bar(known, 'linear-gradient(90deg,#5ccf9f,#6cb4e8)')}
-    <div class="legend"><span>${tt('Пиньинь → иероглиф:')} ${knownRev}</span></div>${bar(knownRev, 'linear-gradient(90deg,#b794f6,#ff7a8a)')}
+    <div class="legend"><span>${tt('Иероглиф → смысл:')} ${known}</span></div>${bar(known, 'linear-gradient(90deg,var(--jade),var(--sky))')}
+    <div class="legend"><span>${tt('Пиньинь → иероглиф:')} ${knownRev}</span></div>${bar(knownRev, 'linear-gradient(90deg,var(--violet),var(--rose))')}
     <div class="panel-title">${tt('Активность за 14 дней')}</div>
     <div class="bars">${days.map(d => `<div class="bar" title="${d.v}"><i class="${d.v ? '' : 'zero'}" style="height:${d.v / max * 80}%"></i>${d.label}</div>`).join('')}</div>`;
 }
@@ -489,6 +578,7 @@ function setLang(l) {
   else if (currentView === 'list') renderList();
   else if (currentView === 'decks') renderDecks();
   else if (currentView === 'stats') renderStats();
+  else if (currentView === 'learned') renderLearned();
   else if (currentView === 'write') nextWrite();
 }
 // выпадающий список языков

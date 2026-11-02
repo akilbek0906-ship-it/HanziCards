@@ -6,7 +6,7 @@
 <title>Иероглифы — карточки</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 <div id="stale" hidden style="background:#ffc857;color:#222;padding:10px 14px;font:14px/1.4 system-ui,sans-serif;text-align:center">
@@ -42,13 +42,32 @@
       <label><span data-i18n>Порция</span> <select id="batchSel"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="0" data-i18n>все</option></select></label>
     </div>
     <div class="study-bar">
-      <div class="left"><button class="btn small" id="undo" data-i18n disabled>← Назад</button> <span id="progress" class="muted"></span></div>
+      <div class="left"><button class="btn small" id="undo" data-i18n disabled>← Назад</button> <button class="btn small learned" id="openLearned"><span data-i18n>Выученные</span> <span id="learnedBadge" class="badge"></span></button>
+        <span id="progress" class="muted"></span></div>
       <div class="opts">
         <label class="check"><input type="checkbox" id="includeKnown"> <span data-i18n>Повторять и известные</span></label>
         <label class="check"><input type="checkbox" id="autoSpeak"> <span data-i18n>Озвучка ответа</span></label>
       </div>
     </div>
+    <div class="practice-bar" id="practiceBar" hidden>
+      <span id="practiceLabel"></span>
+      <button class="btn small" id="exitPractice" data-i18n>Выйти</button>
+    </div>
     <div id="studyArea"></div>
+  </section>
+
+  <section id="view-learned" class="view" hidden>
+    <div class="learned-head">
+      <button class="btn small" id="learnedBack" data-i18n>← К изучению</button>
+      <h2><span data-i18n>Выученные слова</span> <span id="learnedCount" class="badge"></span></h2>
+    </div>
+    <div class="seg" id="learnedSeg">
+      <button data-mode="fwd" data-i18n>Иероглиф → смысл</button>
+      <button data-mode="rev" data-i18n>Пиньинь → иероглиф</button>
+    </div>
+    <div class="learned-actions"><button class="btn primary wide" id="practiceBtn" data-i18n>Тренировать выученные</button></div>
+    <div class="toolbar"><input id="learnedSearch" type="search" placeholder="Поиск среди выученных" data-i18n-ph></div>
+    <ul id="learnedList" class="list"></ul>
   </section>
 
   <section id="view-write" class="view" hidden>
@@ -72,11 +91,20 @@
     </form>
     <div class="toolbar">
       <input id="search" type="search" placeholder="Поиск: иероглиф, пиньинь, перевод" data-i18n-ph>
+      <button class="btn" id="selectBtn">Выбрать</button>
       <button class="btn" id="exportBtn" data-i18n>Экспорт</button>
       <button class="btn" id="importBtn" data-i18n>Импорт</button>
       <input type="file" id="importFile" accept="application/json" hidden>
     </div>
     <ul id="list" class="list"></ul>
+    <div class="select-bar" id="selectBar" hidden>
+      <span id="selCount"></span>
+      <div class="row">
+        <button class="btn small" id="selAll" data-i18n>Все</button>
+        <button class="btn small" id="selNone" data-i18n>Сбросить</button>
+        <button class="btn primary small" id="selStudy" data-i18n>Учить выбранные</button>
+      </div>
+    </div>
   </section>
 
   <section id="view-decks" class="view" hidden>
@@ -96,14 +124,14 @@
 
 <div id="toast" class="toast" role="status"></div>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3/dist/hanzi-writer.min.js"></script>
-<script src="i18n.js?v=7"></script>
-<script src="decks.js?v=7"></script>
-<script src="app.js?v=7"></script>
+<script src="i18n.js?v=9"></script>
+<script src="decks.js?v=9"></script>
+<script src="app.js?v=9"></script>
 <script>
   // Если браузер подтянул старые файлы вперемешку с новыми — подскажем, что делать
   (function () {
     var css = getComputedStyle(document.documentElement).getPropertyValue('--v').trim();
-    if (window.__app !== 7 || css !== '7') document.getElementById('stale').hidden = false;
+    if (window.__app !== 9 || css !== '9') document.getElementById('stale').hidden = false;
   })();
 </script>
 </body>

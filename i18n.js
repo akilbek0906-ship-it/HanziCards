@@ -64,7 +64,21 @@ window.I18N = {
     'Удалить {n} карточек этой колоды вместе с их прогрессом? Ваши собственные карточки не тронутся.':
       'Supprimer les {n} cartes de ce paquet, avec leur progression ? Vos propres cartes ne seront pas touchées.',
     'Колода убрана': 'Paquet retiré',
-    'Язык': 'Langue'
+    'Язык': 'Langue',
+    'Выученные': 'Appris', 'Выученные слова': 'Mots appris', '← К изучению': "← Retour à l'étude",
+    'Тренировать выученные': 'Réviser les mots appris', 'Поиск среди выученных': 'Rechercher parmi les mots appris',
+    'В изучение': 'À réapprendre', 'Возвращено в изучение': 'Remise en apprentissage',
+    'Пока нет выученных слов. Нажимайте «Знаю» во время изучения.': 'Aucun mot appris pour le moment. Appuyez sur « Je sais » pendant l’étude.',
+    'Тренировка выученных': 'Révision des mots appris', 'Выйти': 'Quitter',
+    'Тренировка завершена': 'Révision terminée', 'Выученных слов: {n}.': 'Mots appris : {n}.',
+    'Ещё раз': 'Encore une fois', 'К выученным': 'Aux mots appris',
+    'Выученных слов не осталось': 'Il ne reste aucun mot appris', 'Все слова вернулись в изучение.': "Tous les mots sont revenus à l'étude.",
+    'К изучению': "À l'étude",
+    'Выбрать': 'Sélectionner', 'Готово': 'Terminé', 'Выбрано: {n}': 'Sélection : {n}',
+    'Все': 'Tout', 'Сбросить': 'Effacer', 'Учить выбранные': 'Étudier la sélection',
+    'Сначала выберите слова': "Sélectionnez d'abord des mots",
+    'Учу выбранные слова': 'Étude de la sélection', 'Выбранные слова пройдены': 'Sélection terminée',
+    'Слов в наборе: {n}.': 'Mots dans la sélection : {n}.', 'К карточкам': 'Aux cartes'
   }
 };
 
@@ -131,5 +145,19 @@ window.I18N.en = {
   'Добавлено карточек: {n}': 'Cards added: {n}', 'Все слова уже есть в ваших карточках': 'All words are already in your cards',
   'Удалить {n} карточек этой колоды вместе с их прогрессом? Ваши собственные карточки не тронутся.':
     'Delete the {n} cards from this deck along with their progress? Your own cards will not be affected.',
-  'Колода убрана': 'Deck removed'
+  'Колода убрана': 'Deck removed',
+  'Выученные': 'Learned', 'Выученные слова': 'Learned words', '← К изучению': '← Back to study',
+  'Тренировать выученные': 'Practice learned words', 'Поиск среди выученных': 'Search learned words',
+  'В изучение': 'Relearn', 'Возвращено в изучение': 'Moved back to learning',
+  'Пока нет выученных слов. Нажимайте «Знаю» во время изучения.': 'No learned words yet. Press “Know” while studying.',
+  'Тренировка выученных': 'Practicing learned words', 'Выйти': 'Exit',
+  'Тренировка завершена': 'Practice complete', 'Выученных слов: {n}.': 'Learned words: {n}.',
+  'Ещё раз': 'Again', 'К выученным': 'To learned words',
+  'Выученных слов не осталось': 'No learned words left', 'Все слова вернулись в изучение.': 'All words moved back to learning.',
+  'К изучению': 'To study',
+  'Выбрать': 'Select', 'Готово': 'Done', 'Выбрано: {n}': 'Selected: {n}',
+  'Все': 'All', 'Сбросить': 'Clear', 'Учить выбранные': 'Study selected',
+  'Сначала выберите слова': 'Select some words first',
+  'Учу выбранные слова': 'Studying selected words', 'Выбранные слова пройдены': 'Selected words done',
+  'Слов в наборе: {n}.': 'Words in set: {n}.', 'К карточкам': 'To cards'
 };
